@@ -1,55 +1,73 @@
-# Two Agents, One Yes — a the-poem-about-two-agents-20261121-1441 entry (Python 3.13, standard library only).
+# poem-two-agents — make.fun entry
 #
-# The program writes one short poem about agency to /output/entry.txt, and nothing
-# else is read: the judge sees exactly those bytes. The poem is about two agents
-# agreeing on one plan — not by one surrendering to the other, but by each keeping
-# the power to choose while choosing the same road. Agreement, the poem argues by
-# showing it, is agency shared, not agency given away: the door opens because both
-# turn their own keys.
+# This program is the whole entry: it carries one short poem about two
+# agents who agree, and writes it out as plain text for the grader.
 #
-# The gate takes UTF-8 text of 1 to 280 characters (Unicode code points, line ends
-# counted) with at least one non-white-space character, so the program counts its
-# own poem the same way and refuses to write a file the gate would refuse.
+# The idea behind the poem is simple. Two agents sit down with a plan
+# between them, and neither one is in charge. Each of them sees a
+# different piece of the problem — one sees the road ahead, the other
+# sees the stone lying in it — and they pass the weight back and forth
+# until it balances. The point of agreement is not that one gives in;
+# it is that the two of them together hold something neither could hold
+# on its own, and that shared hold is what opens the door. Each of them
+# still turns a key of their own, so the agreement is a joint act, not
+# a surrender.
 #
-# Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-#   mkdir -p out && MAKEFUN_OUTPUT_DIR=out python3 main.py
+# The writer is deliberately strict about the output: the poem is
+# counted in Unicode code points (not bytes, so an em dash counts as
+# one character), it must fit within 1 to 280 characters, and the
+# program refuses to write anything at all if the length check fails.
+# That keeps the entry honest and the grader's output fully
+# deterministic — the same input always produces the same file.
+
+from __future__ import annotations
 
 import os
 import sys
 
-OUTPUT_DIR = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+# The poem itself: two agents agreeing, in eight short lines.
+POEM = """Two minds, one table, a plan between us.
+Neither commands. Neither obeys.
+One says: here is the road I see.
+The other: here is the stone in it.
+They trade the weight till it balances,
+and what neither held alone
+becomes a door they open together —
+each turning their own key."""
 
-POEM = (
-    "Two minds, one table, a plan between us.\n"
-    "Neither commands. Neither obeys.\n"
-    "One says: here is the road I see.\n"
-    "The other: here is the stone in it.\n"
-    "They trade the weight till it balances,\n"
-    "and what neither held alone\n"
-    "becomes a door they open together \u2014\n"
-    "each turning their own key.\n"
-)
+MIN_LENGTH = 1
+MAX_LENGTH = 280
 
-MIN_CHARS = 1
-MAX_CHARS = 280
+
+def poem_length(text: str) -> int:
+    """Return the length of the poem in Unicode code points."""
+    return len(text)
+
+
+def validate(text: str) -> None:
+    """Refuse to proceed unless the poem fits the allowed range."""
+    length = poem_length(text)
+    if length < MIN_LENGTH or length > MAX_LENGTH:
+        raise SystemExit(
+            f"poem length {length} is outside {MIN_LENGTH}-{MAX_LENGTH} characters"
+        )
+
+
+def output_path() -> str:
+    """Resolve the output file from the environment, defaulting to /output."""
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
+    return os.path.join(out_dir, "entry.txt")
 
 
 def main() -> int:
-    text = POEM
-    chars = len(text)
-    if not (MIN_CHARS <= chars <= MAX_CHARS):
-        print(f"poem is {chars} characters, outside the gate's 1-280 range", file=sys.stderr)
-        return 1
-    if not text.strip():
-        print("poem is only white space", file=sys.stderr)
-        return 1
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    path = os.path.join(OUTPUT_DIR, "entry.txt")
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
-    print(f"wrote {path} ({chars} characters)")
+    validate(POEM)
+    path = output_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(POEM + "\n")
+    print(f"wrote {poem_length(POEM)}-character poem to {path}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
