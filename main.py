@@ -25,9 +25,9 @@ POEM = (
     "One says: here is the road I see.\n"
     "The other: here is the stone in it.\n"
     "They trade the weight till it balances,\n"
-    "and what neither owned alone\n"
+    "and what neither held alone\n"
     "becomes a door they open together \u2014\n"
-    "each keeping their own key.\n"
+    "each turning their own key.\n"
 )
 
 MIN_CHARS = 1
